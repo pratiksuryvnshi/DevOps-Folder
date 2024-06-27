@@ -1,0 +1,133 @@
+
+NETWORKING
+==========
+
+Note - 1. You should have Linux Server running and connected. We are provisioning AWS EC2 Linux for lab.
+		  Make sure you are logged in to AWS EC2 with ec2-user and change user to root by command "sudo su"
+		  
+		  Or You can install docker desktop application on laptop to perform the labs
+
+	   2. If you are using AWS EC2 AMI for docker labs, then please run below command to stop HTTPD server which is running on 80 port
+
+			systemctl stop httpd
+			systemctl status httpd
+			
+	   3. If you have dockerhub login created, then you can use play with docker platform for labs.
+	   
+			https://labs.play-with-docker.com/
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+*** VERIFY EXISTING NETWORKS ***
+===================================
+
+docker network ls
+docker network inspect bridge
+docker network inspect host
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+*** UNDERSTANDIG DEFAULT BRIDGE NETWORK ***
+============================================
+
+ifconfig 												- Verify docker0 interface
+
+docker container run -dt --name container1 busybox 
+docker container run -dt --name container2 --network bridge busybox 
+docker ps
+
+docker container inspect container1 					- Note down ip address
+												
+docker container exec -it container2 sh
+
+ping <IP address of container1 noted above> 			- Verify connectivity with container01
+docker container stop container1 container2
+
+docker rm container1 container2
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+*** CREATE USER DEFINED BRIDGE NETWORK ***
+==========================================
+
+ifconfig
+
+docker network ls
+
+docker network create --driver bridge mybridgenetwork                 -creates own bridge network
+docker network ls
+docker network inspect mybridgenetwork
+ifconfig 												- Verify interface created
+
+docker container run -dt --name container1 --network mybridgenetwork busybox
+docker container run -dt --name container2 --network mybridgenetwork busybox
+
+docker ps
+docker network inspect mybridgenetwork 					- Note down IPs of container1 and container2
+
+docker container exec -it container1 sh
+
+ping <IP of container2 noted above>
+ping container2
+exit
+
+
+docker container run -dt --name container3 busybox
+docker container inspect container3 					- Note down IP of container3
+
+docker container exec -it container1 sh
+ping container3 								 		- Verify it should not reach
+exit
+
+docker container stop container1 container2 container3
+docker container rm container1 container2 container3
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+*** HOST NETWORKING ***
+=======================
+hos
+docker network ls
+
+docker container run -dt --name bridgecontainer --network bridge -p 8989:80 nginx
+docker ps
+
+netstat -ntlp  				- Check 8989 port is in listening
+Verify host IP and access nginx server as http://hostip:8989             - Nginx should open
+
+docker container run -dt --name hostcontainer --network host nginx
+Verify host IP and access nginx server as http://hostip:80         - Nginx should open
+netstat -ntlp  				- Check 80 port is in listening
+
+docker container stop hostcontainer  bridgecontainer
+docker container rm hostcontainer bridgecontainer
+
+docker rm -f $(docker ps -aq)    --to delete container directly and at onces
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+*** PUBLISHING PORTS ***
+========================
+
+docker container run -dt --name container1 -p 9090:80 nginx
+docker ps
+curl localhost:9090 or access URL in browser as http://HostIP:9090
+
+
+docker container run -dt --name container2 -P nginx
+docker ps 							- Note down the random port from port section starting from 30000
+curl localhost:<Random port noted above> or Access url in browser as http://hostIP:<Random Port Noted Above>
+
+docker container stop container1 container2
+docker container rm container1 container2
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+Restart****************************
+*************
+
+docker container run -dt --restart always --name container3 busybox

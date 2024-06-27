@@ -1,0 +1,153 @@
+
+GETTING STARTED
+===============
+
+Note - 1. You should have Linux Server running and connected. We are provisioning AWS EC2 Linux for lab.
+		  Make sure you are logged in with root user.
+
+	   2. If you are using AWS EC2 AMI for server, then please run below command to stop HTTP server which is running on 80 port
+
+			systemctl stop httpd
+			systemctl status httpd
+			
+	   3. Create dir k8s, and create files and directories in this path wherever required
+	   
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+*** SERVICE ***
+===============
+
+cd k8s
+
+Adding PODs to Service - 1 st Option - By label and selector
+--------------------------------------------------------------
+
+kubectl get pods
+kubectl run blue-pod --image=nginx
+kubectl label pod blue-pod app=demo
+
+kubectl get pods --show-labels
+
+vi bg.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+ name: application-service
+spec:
+ type: NodePort
+ ports:
+ - name: http
+   port: 80
+   targetPort: 80
+ selector:
+   app: demo
+
+ 
+save file
+kubectl apply -f bg.yaml
+kubectl get pods
+kubectl describe svc application-service
+
+kubectl delete svc application-service
+kubectl delete pod blue-pod
+
+--------------------------------------------------------------------
+
+*** SERVICE - NODEPORT ***
+==========================
+
+cd k8s
+
+vi nodeport.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-service
+spec:
+  type: NodePort
+  selector:
+    run: nginx
+  ports:
+    - protocol: TCP
+      port: 9090
+      targetPort: 80
+
+save file
+kubectl apply -f nodeport.yaml
+kubectl get svc                				  - Verify type and port randomaly allocated
+kubectl describe svc my-service
+
+
+kubectl run nginx --image=nginx 
+kubectl get pods
+kubectl describe svc my-service   			  - Verify endpoint added for service my-service and note down the random port of service
+
+kubectl get nodes
+
+Or note down public IP of master or workernode1
+access URL as http://<public IP>: <random port of service>  	- Verify you should see nginx running
+
+kubectl delete svc my-service
+kubectl delete pod nginx
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+*** SERVICE - LOAD BALANCER ***
+================================
+
+
+cd k8s
+
+kubectl get pods
+
+kubectl run nginx --image=nginx 
+kubectl get pods
+
+vi lb.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-service
+spec:
+  type: LoadBalancer
+  selector:
+    run: nginx
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+
+save file
+kubectl apply -f lb.yaml
+kubectl get svc               				  						    - Verify Type column and note down the external IP
+
+If you get an error about external IP pending, run below command. Please update public IP in command.
+kubectl patch svc my-service -n default -p '{"spec": {"type": "LoadBalancer", "externalIPs":["<public_ip>"]}}'
+
+or
+
+Access application through browser http://external IP  or http://<public-IP of master or workernode1>noted above       - Verify nginx page should open
+kubectl delete svc my-service
+kubectl delete pod nginx
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+*** CREATE SERVICE VIA CLI ***
+===============================
+
+cd k8s
+kubectl get deployments
+kubectl create deployment nginx --image=nginx --replicas=2
+kubectl expose deployment nginx --name nginx-svc --port=80 --target-port=80 --dry-run=client -o yaml
+kubectl expose deployment nginx --name nginx-svc --port=80 --target-port=80 
+kubectl get svc
+kubectl describe svc nginx-svc
+
+kubectl delete svc nginx-svc
+kubectl delete deployment nginx
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

@@ -1,0 +1,169 @@
+
+GETTING STARTED
+===============
+
+Note - 1. You should have Linux Server running and connected. We are provisioning AWS EC2 Linux for lab.
+		  Make sure you are logged in to AWS EC2 with ec2-user and change user to root by command "sudo su"
+		  
+		  Or You can install docker desktop application on laptop to perform the labs
+
+	   2. If you are using AWS EC2 AMI for docker labs, then please run below command to stop HTTPD server which is running on 80 port
+
+			systemctl stop httpd
+			systemctl status httpd
+			
+	   3. If you have dockerhub login created, then you can use play with docker platform for labs.
+	   
+			https://labs.play-with-docker.com/
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+*** DOCKER INSTALLATION ON LINUX AMAZON EC2 ***
+================================================
+
+1. yum install docker -y 
+
+2. systemctl start docker
+
+3. systemctl status docker
+
+4. docker --version
+   docker system info
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+*** DOCKER INSTALLATION ON UBUNTU AMAZON EC2 *** (Optional)
+===========================================================
+
+Please follow the below URL for installation steps on ubuntu
+
+https://docs.docker.com/engine/install/ubuntu/
+
+Or
+
+Run below commands step by step
+
+1. apt-get update
+ 
+2. apt-get install \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    gnupg \
+    lsb-release
+  
+3. curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+ 
+4. echo \
+  "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+ 
+5. apt-get update
+6. apt-get install docker-ce docker-ce-cli containerd.io
+ 
+7. systemctl status docker
+8. docker --version
+   docker system info
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+*** DOCKER INSTALLATION ON WINDOWS - DOCKER DESKTOP ***
+========================================================
+
+1. Please download windows Docker desktop installer from below link
+
+https://docs.docker.com/desktop/windows/install/
+
+2. Install docker desktop application
+3. Launch Docker desktop application
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+*** QUICK UNDERSTANDING OF DOCKER IMAGES ***
+============================================
+
+docker pull nginx  
+docker images ls
+docker pull ubuntu
+docker images ls
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+*** QUICK UNDERSTANDING OF CONTAINER ***
+========================================
+
+docker run -dt --name demo nginx    //dt means--detach 
+docker ps
+docker ps -a
+
+docker stop demo 
+docker rm demo
+docker ps
+
+docker container run -dt nginx
+docker container stop <container id>
+docker container rm <container id>
+docker image rm nginx  OR
+docker rmi <name>
+docker images
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+*** PORT BINDING ***
+====================
+enable port in SG AWS
+
+docker container run -dt --name mydemo -p 8080:80 nginx
+docker ps
+netstat -ntlp
+curl localhost:8080 or access through browser http://<public IP of host>:8080
+docker container stop mydemo
+docker container rm mydemo
+docker ps
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+*** ATTACHED AND DETACHED MODE ***
+===================================
+
+-----Attached Mode ------
+
+docker container run --name mydemo -p 8888:80 nginx 
+access through browser http://<public IP of host>:8888 
+Press CtL +C to terminate the container and go to the bash
+
+docker container stop mydemo
+docker container rm mydemo
+docker ps
+
+-----Detached Mode ------
+
+docker container run -dt --name mydemo -p 8080:80 nginx
+curl localhost:8080 or access through browser http://<public IP of host>:8080
+
+docker container stop mydemo
+docker container rm mydemo
+docker ps
+
+docker rm -f $(docker ps -aq)    --to delete container directly and at onces
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+*** CONTAINER LOGIN ***
+=======================
+
+docker container run -dt --name mydemo -p 8080:80 nginx                 ## create container with port access
+docker container exec -it mydemo ls                                     ## to list the container from outside
+docker container exec -it mydemo uname -a                               ## give output from outside of container
+docker container exec -it mydemo touch /tmp/myfile.txt    
+docker container exec -it mydemo bash                                   ##for login cmd
+ls -lrt /tmp/myfile.txt
+exit
+docker container stop mydemo
+docker container rm mydemo
+docker ps
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+

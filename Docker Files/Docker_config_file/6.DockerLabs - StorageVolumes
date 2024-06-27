@@ -1,0 +1,66 @@
+
+
+STORAGE DRIVERS
+===============
+
+
+Note - 1. You should have Linux Server running and connected. We are provisioning AWS EC2 Linux for lab.
+		  Make sure you are logged in to AWS EC2 with ec2-user and change user to root by command "sudo su"
+
+	   2. If you are using AWS EC2 AMI for docker volume labs, then please run below command to stop HTTPD server which is running on 80 port
+
+			systemctl stop httpd
+			systemctl status httpd
+		
+	   
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+*** DOCKER VOLUME ***
+=====================
+
+docker container run -dt --name mydemo nginx
+docker ps
+cd /var/lib/docker/overlay2
+ls -lrt 							- Verify number of directories
+docker container stop mydemo
+docker container rm mydemo
+
+ls -lrt 							- Verify one/two directories gets deleted. i.e. Container writable layer
+
+docker volume ls
+docker volume create demovolume
+docker volume ls
+
+docker container run -dt --name mydemo -v demovolume:/var nginx 
+docker ps
+docker volume inspect demovolume
+cd /var/lib/docker/volumes/demovolume/_data   		- Verify files and directories
+
+ls -lrt
+docker container exec -it mydemo bash
+cd /var
+ls -lrt 											- Verify files and directories. Data should be same as above, as /var is mounted
+exit
+
+docker container stop mydemo
+docker container rm mydemo
+docker ps -a
+
+cd /var/lib/docker/volumes/demovolume/_data   		- Verify files and directories are not deleted with container deletion
+ls -lrt
+
+docker volume rm demovolume
+ls -lrt /var/lib/docker/volumes/          			- Verify files and directories deleted with volume deletion
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+
+
+
+
+
+

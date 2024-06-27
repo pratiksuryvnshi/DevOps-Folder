@@ -1,0 +1,119 @@
+
+Ansible
+========
+
+Pre-Requisites
+==============
+
+2 AWS EC2 Instances with below tags or names
+
+
+controller		- t2.micro
+node1			- t2.micro
+
+On controller		- sudo hostnamectl set-hostname "controller"
+On node1			- sudo hostnamectl set-hostname "node1"
+
+ 
+Installation - Controller and (node or client)
+=============================================
+
+Run below command on controller
+
+Sudo yum install ansible
+
+4. Run below command on both the server to check the status of sshd
+
+	systemctl status sshd
+	
+5. Add node1 private ip entry in /etc/hosts file of controller.
+e.g. 1.2.3.4  node1
+
+6. Ping node1 - It should work
+
+7. Or change the password of root on node1 by running
+
+passwd root
+change password authentication parameter in /etc/sshd_config file to yes
+PermitRootLogin yes
+restart sshd 
+
+For password less authentication, follow below steps 
+
+Run commands given in link from controller 
+
+https://www.tecmint.com/ssh-passwordless-login-using-ssh-keygen-in-5-easy-steps/
+
+ssh root@node1               - It should login to node1
+
+===================================================================================
+
+Running Ansible
+===============
+
+1. Go to /etc/ansible/hosts file and add node1 private ip
+
+Run all below commands from controller only
+
+1. Verify ping works by ansible
+
+ansible node1 -m ping					- It should return success
+
+2. Go to /etc/ansible/hosts file and add node1 under [webservers]
+
+e.g. [webservers]
+	  1.2.3.4
+ansible webservers -m ping
+
+3. Create your own inventory file and use it
+
+Create file /etc/ansible/inventory and add entry as below
+[web]
+node1
+
+ansible web -i /etc/ansible/inventory -m ping
+
+add node1 entry again in /etc/ansible/hosts file if missing
+
+4. Running ad-hoc command
+
+ansible node1 -m copy -a "src=/etc/hosts dest=/tmp"				- Verify file gets copied in /tmp on node1
+ansible node1 -m yum -a "name=httpd state=absent"				- Verify httpd gets removed
+ansible node1 -m yum -a "name=httpd state=present"				- Verify httpd gets installed
+ansible node1 -m service -a "name=httpd state=started"			- Verify httpd service gets started
+
+ansible node1 -m yum -a "name=httpd state=absent"				- Verify httpd gets removed
+
+5. Ansible playbook
+
+Create file httpd.yml with below content
+
+---
+- name: Installing httpd
+  hosts: node1
+  remote_user: root 
+
+  tasks:
+  - name: HTTPD installation
+    yum:
+      name: httpd
+      state: present 
+
+  - name: Start the service 
+    service:
+      name: httpd
+      state: started
+	  
+ansible-playbook httpd.yml							- Verify httpd is installed on node1
+
+
+======================================================================================================
+
+Ansible Tower Installation and Configuration
+------------------------------------------
+
+Follow below link 
+
+http://redhatgov.io/workshops/ansible_automation/exercise2.0/
+
+

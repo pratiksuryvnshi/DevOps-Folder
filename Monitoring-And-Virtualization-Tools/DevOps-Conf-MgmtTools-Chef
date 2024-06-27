@@ -1,0 +1,181 @@
+
+Chef
+====
+
+Pre-Requisites
+==============
+
+3 AWS EC2 Amazon AMI EC2 Instances with below tags or names
+
+ Tags/Name			Instance Type
+Chef-Server  		- t2.medium
+Chef-Node			- t2.micro
+Chef-Workstation	- t2.micro
+
+On chef-server 	- sudo hostnamectl set-hostname "chef-server"
+On node1 		- sudo hostnamectl set-hostname "node1"
+On workstation 	- sudo hostnamectl set-hostname "workstation"
+
+ 
+Installation
+============
+
+Chef-Server - manual installation
+-----------
+
+1. Login to Chef-Server EC2 instance
+2. https://www.chef.io/downloads/tools/infra-server?os=amazon and download RPM locally. Copy or move that rpm to chef-server.
+You can use winscp to transfer the rpm.
+3. rpm -ivh <rpm>
+4. chef-server-ctl reconfigure
+5. chef-server-ctl status
+6. chef-server-ctl user-create chefadmin chef admin chefadmin@gmail.com "chefadmin@123" --filename chefadmin.pem
+7. chef-server-ctl org-create demo "demo org" --associate_user chefadmin --filename validator.pem
+8. chef-server-ctl 	install chef-manage
+9. chef-server-ctl reconfigure
+10. Try to access chef URL as https://<chef-server-publicIP> and login with username and password created in step 6.
+
+
+Chef-Workstation
+----------------
+
+Login to workstation server
+1. Get a link from internet or chefworkstation download site for chefdk
+https://www.chef.io/downloads/tools/workstation?os=amazon
+
+wget <above link>
+
+2. rpm -ivh <above downloaded rpm>
+3. Check by running commands like
+chef
+knife
+
+4. Go to chef-server URL -> Administration -> select org -> Select Generate knife Config
+5. It will download chef-starter foler
+6. Go inside chef-starter folder and copy chef-repo server to the workstation EC2 server by WinSCP tool.
+9. chown root:root devopscloudworld.pem
+10 chmod 400 devopscloudworld.pem
+11. knife ssl fetch
+12. knife client list			(You should see orgname-validator as output)
+
+
+
+Chef-Node1
+----------
+
+1. Login to chef-node1 EC2 server
+2. Copy content of key.pem file used for login to chef-node1 and create key.pem file on workstation.
+3. knife bootstrap 65.2.178.170 --ssh-user ec2-user --sudo --ssh-identity-file key.pem -N chef-node1
+4. Verify node1 has been added to chef server UI
+or run
+knife node list
+
+Creating Cookbooks
+------------------
+
+1. Go to workstation -> cookbook directory
+2. chef generate cookbook democookbook
+3. cd democookbook/reciepes/ and open default.rb
+4. Add contents as below
+
+package 'httpd' do
+	action :install
+end
+
+file '/var/www/html/index.html' do
+content 'Welcome to Chef'
+action :create
+end
+
+service 'httpd' do
+action [:enable, :start]
+end
+
+5. Get on cookbook dir
+6. knife cookbook upload democookbook
+7. Go to chef server URL and verify cookbook uploaded
+8. On workstation, run 
+knife node run_list add node1 recipe[democookbook::default]
+
+
+Running/Applying chef cookbook on node
+--------------------------------------
+
+1. Login to node1 -> sudo su
+	export LC_ALL=en_US.UTF-8
+	export LANG=en_US.UTF-8
+2. run - chef-client
+3. verify httpd is installed
+4. Try to run chef-client again, it will not do anything as httpd is already installed
+
+======================================================================================================
+
+Or 
+
+You can use hosted chef instead of chef-server by using below steps
+
+
+Chef-Server - Hosted Chef
+------------------------
+
+1. Create an account on https://manage.chef.io/login
+2. Enter email address, validate email address and then create user and organization.
+
+Setting Workstation
+------------------
+Download chef workstation from below link and install on workstation
+https://www.chef.io/downloads/tools/workstation?os=amazon
+
+1. Login to Chef URL -> Administration -> Select organization -> Starter kit
+2. Download starter kit, extract and copy on workstation node.
+3. go to chef-repo dir
+4. knife ssl check  ( in case does not work - execute yum install libxcrypt-compat)
+5. go to cookbooks folder and create cookbook
+6. chef generate cookbook apache-cookbook
+7. Create below contents in cookbooks/apache-cookbook/reciepes/default.rb
+
+package 'httpd' do
+	action :install
+end
+
+file '/var/www/html/index.html' do
+content 'Welcome to Chef'
+action :create
+end
+
+service 'httpd' do
+action [:enable, :start]
+end
+
+8. knife cookbook upload apache-cookbook			- verify chef server url cookbook uploaded
+
+Bootstrapping node
+------------------
+1. Create EC2 instance and call it as node1
+1. Copy ec2 key file for node1 on workstation to connect or bootstrap from workstation
+2. run below command from chef-repo directory . please use private ip of node1
+knife bootstrap 172.31.19.54 --ssh-user ec2-user --sudo -i aws-demo-lin-mumbai.pem -N node1
+3. verify in chef server url node1 is added
+4. knife node list
+5. knife cookbook list
+6. knife node run_list set node1 "recipe[apache-cookbook::default]"
+
+Running chef on node1
+------------------
+
+1. Login to node1
+2. run chef-client
+3. verify httpd is installed by hitting url as http://public ip of node1
+
+Modify and Push New Changes
+---------------------------
+
+1. Go to workstation and cookbook/apache-cookbook directory
+2. Modify contents of receipe/default.rb file 
+3. knife cookbook upload apache-cookbook
+4. Verify New changes reflected.
+
+
+
+
+

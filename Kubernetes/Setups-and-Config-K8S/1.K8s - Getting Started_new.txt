@@ -1,0 +1,307 @@
+
+
+GETTING STARTED
+===============
+
+Note - 1. You should have Linux Server running and connected. We are provisioning AWS EC2 Linux for lab.
+		  Make sure you are logged in to AWS EC2 with root user.
+
+	   2. If you are using AWS EC2 AMI for server, then please run below command to stop HTTPD server which is running on 80 port
+
+			systemctl stop httpd
+			systemctl status httpd
+			
+	   3. Create dir k8s, and create files and directories in this directory wherever required
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+*** INSTALLATION ***
+====================
+
+
+Method 1 - By Using kubeadm:
+---------------------------
+
+High Level Steps
+----------------
+
+1. Install container runtime on all nodes- We will be using Docker.
+2. Install Kubeadm, Kubelet, and kubectl on all the nodes.
+3. Initiate Kubeadm control plane configuration on the master node.
+4. Save the node join command with the token.
+5. Install the Calico network plugin.
+6. Join worker node to the master node (control plane) using the join command.
+7. Validate all cluster components and nodes.
+9. Deploy a sample app and validate the app
+
+
+Detailed Steps to Install kubernetes by Using Kubeadm
+-----------------------------------------------------
+
+Note - We will use 1 Master and 1 worker node. Hence, we need to create total 2 ubuntu EC2 of type t2.medium on AWS. 
+Please use Ubuntu AMI OS version 20.
+
+1. Make sure, two ubuntu EC2 servers are up and running and connected with root login. Once logged in to ubuntu user, switch to root - Run sudo su
+Add tag or label as - One as Master and another as workernode1
+
+If you want, you can change hostnames for easy understanding. Run below commands
+
+On Master node - sudo hostnamectl set-hostname "master"
+On Workernode1 - sudo hostnamectl set-hostname "workernode1"
+
+Reconnect again both the servers and switch to root user.
+
+2. Get the Docker GPG key (Run below commmand on both the nodes)
+
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -    OR
+
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+
+3. Add the Docker repository(Execute the following command on All the Nodes)
+
+sudo add-apt-repository    "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+   $(lsb_release -cs) \
+  stable"
+  
+4. Get the Kubernetes gpg key(Execute the following command on All the Nodes)
+
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -   OR
+
+curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes.gpg
+
+5. Add the Kubernetes repository(Execute the following command on All the Nodes)
+
+cat << EOF | sudo tee /etc/apt/sources.list.d/kubernetes.list
+deb https://apt.kubernetes.io/kubernetes-xenial main
+EOF
+
+In case you get error adding above repo as packages not available while executing sudo apt-get update
+
+remove above content from /etc/apt/sources.list.d/kubernetes.list using vi Editor and execute following command
+
+mkdir /etc/apt/keyrings
+
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+
+echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
+
+6. Update your packages(Execute the following command on All the Nodes)
+
+sudo apt-get update
+
+7. Install Docker, kubelet, kubeadm, and kubectl(Execute the following command on All the Nodes)
+
+sudo apt-get install -y docker-ce kubelet kubeadm kubectl
+
+8. Hold them at the current version(Execute the following command on All the Nodes)
+
+sudo apt-mark hold docker-ce kubelet kubeadm kubectl
+
+9. Add the iptables rule to sysctl.conf (Execute the following command on All the Nodes)
+
+echo "net.bridge.bridge-nf-call-iptables=1" | sudo tee -a /etc/sysctl.conf
+
+10. Enable iptables immediately(Execute the following command on All the Nodes
+
+sudo sysctl -p
+
+11. Disable swap memory (Execute the following command on All the Nodes)
+
+sudo swapoff -a
+sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+
+12. To set cgroup driver for kubernetes (Execute the following command on All the Nodes)
+
+create file called = vi /etc/docker/daemon.json
+Add below content into file and save it
+
+{
+"exec-opts": ["native.cgroupdriver=systemd"]  ##cgroupfs
+}
+
+
+If the error comes of 6443 then simple modify the daemon.json file use " cgroupfs instead of systemd"
+and then reboot your instance
+
+13. Run below commands to restart docker and kubelet (Execute the following command on All the Nodes)
+
+ systemctl daemon-reload
+ systemctl restart docker
+ systemctl restart kubelet
+ 
+ systemctl status kubelet
+
+ 
+ -------------8-8-8-8-8-8-8-8-8-8-8-8-8-8-8-8-8-8-8-8-8-8-8-8-8-8-8--------------
+ 
+14.  Initialize the cluster (Execute the following command only on the Master node)
+
+sudo kubeadm init 
+or
+sudo kubeadm init --pod-network-cidr=10.244.0.0/16
+
+If you face any errors running above command then follow workaround as below.
+
+rm /etc/containerd/config.toml		(Run this on all the nodes)
+systemctl restart containerd		(Run this on all the nodes)
+kubeadm init						(Run this on master node only)
+
+15. Set up local kubeconfig(Execute the following command only on the Master node)	
+	
+	mkdir -p $HOME/.kube
+	sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+	sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+16. On the control plane node only, install Calico networking
+
+a. kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.27.3/manifests/tigera-operator.yaml 
+					----- OR -----
+
+kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.25.1/manifests/tigera-operator.yaml
+
+b. curl https://raw.githubusercontent.com/projectcalico/calico/v3.27.3/manifests/custom-resources.yaml -O
+            				     -----OR-----
+kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.25.1/manifests/custom-resources.yaml
+
+c. kubectl create -f custom-resources.yaml
+		--------------------------------------------------------------------
+		--------------------------------------------------------------------
+INSTALL CALICO
+Install the Tigera Calico operator and custom resource definitions.
+
+kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.27.3/manifests/tigera-operator.yaml
+
+
+NOTE
+Due to the large size of the CRD bundle, kubectl apply might exceed request limits. Instead, use kubectl create or kubectl replace.
+
+Install Calico by creating the necessary custom resource. For more information on configuration options available in this manifest, see the installation reference.
+
+kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.27.3/manifests/custom-resources.yaml
+
+
+NOTE
+Before creating this manifest, read its contents and make sure its settings are correct for your environment. For example, you may need to change the default IP pool CIDR to match your pod network CIDR.
+
+Confirm that all of the pods are running with the following command.
+
+watch kubectl get pods -n calico-system
+
+Wait until each pod has the STATUS of Running.
+
+NOTE
+The Tigera operator installs resources in the calico-system namespace. Other install methods may use the kube-system namespace instead.
+
+Remove the taints on the control plane so that you can schedule pods on it.
+
+kubectl taint nodes --all node-role.kubernetes.io/control-plane-
+kubectl taint nodes --all node-role.kubernetes.io/master-
+
+It should return the following.
+
+node/<your-hostname> untainted
+
+Confirm that you now have a node in your cluster with the following command.
+
+kubectl get nodes -o wide
+
+It should return something like the following.
+
+NAME              STATUS   ROLES    AGE   VERSION   INTERNAL-IP   EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION    CONTAINER-RUNTIME
+<your-hostname>   Ready    master   52m   v1.12.2   10.128.0.28   <none>        Ubuntu 18.04.1 LTS   4.15.0-1023-gcp   docker://18.6.1
+
+
+Congratulations! You now have a single-host Kubernetes cluster with Calico.		
+		---------------------------------------------------------------
+
+#    kubectl taint nodes --all node-role.kubernetes.io/control-plane-
+
+kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/calico.yaml
+
+
+17. Check the status of calico components and wait till all the containers are in running state
+
+kubectl get pods -n kube-system
+
+18. Run below command on master node only to get command to join worker node
+
+kubeadm token create --print-join-command
+
+19. In worker nodes, paste the kubeadm join command to join the cluster
+
+20. To view the status of cluster on master node, run
+
+kubectl get nodes
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Validate the Cluster by deploying sample application
+----------------------------------------------------
+
+1. Create the nginx deployment. Execute below command directly on master node
+
+cat <<EOF | kubectl apply -f -
+apiVersion: apps/v1
+kind: Deployment/service/pod
+metadata:
+  name: nginx-deployment
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  replicas: 2 
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80      
+EOF
+
+2. Expose the Nginx deployment on a NodePort 32000
+
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+spec:
+  selector: 
+    app: nginx
+  type: NodePort  
+  ports:
+    - port: 80
+      targetPort: 80
+      nodePort: 32000
+EOF
+
+
+3. Once the deployment is up, you should be able to access Nginx home page on the allocated NodePort
+
+e.g http://<public IP of master node><:32000>
+
+
+Method 2 - Docker Desktop:
+--------------------------
+
+Got to Docker desktop setting and enable kubernetes
+
+Method 3 - Minikube 
+--------------------
+
+https://kind.sigs.k8s.io/docs/user/quick-start/
+
+
+*** KUBECTL INSTALLATION ***
+============================
+
+Please follow the below link to install kubectl
+
+https://kubernetes.io/docs/tasks/tools/
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

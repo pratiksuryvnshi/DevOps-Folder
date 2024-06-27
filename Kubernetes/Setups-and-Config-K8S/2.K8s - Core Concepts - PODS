@@ -1,0 +1,125 @@
+
+GETTING STARTED
+===============
+
+Note - 1. You should have Linux Server running and connected. We are provisioning AWS EC2 Linux for lab.
+		  Make sure you are logged in with root user.
+
+	   2. If you are using AWS EC2 AMI for server, then please run below command to stop HTTP server which is running on 80 port
+
+			systemctl stop httpd
+			systemctl status httpd
+			
+	   3. Create dir k8s, and create files and directories in this directory wherever required
+	   
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+*** UNDERSTANDING PODS ***
+==========================
+
+docker container run -dt --name dockerdemo nginx
+docker ps
+docker exec -it dockerdemo bash
+
+kubectl run k8sdemo --image=nginx
+kubectl get pods
+kubectl exec -it k8sdemo bash
+
+docker container stop dockerdemo 
+docker container rm dockerdemo
+
+kubectl describe pods k8sdemo
+
+kubectl delete pod k8sdemo
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+*** CREATING PODS ***
+=====================
+
+1st option
+----------
+
+cd k8s
+
+vi pod.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: poddemo
+spec:
+  containers:
+  -  image: nginx
+     name: poddemo
+	 
+save file
+kubectl apply -f pod.yaml
+kubectl get  pods
+kubectl describe pod poddemo
+kubectl delete pod poddemo
+
+
+2nd option
+---------
+
+kubectl run poddemo --image=nginx
+kubectl get pods
+kubectl describe pod poddemo
+kubectl delete pod poddemo
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+*** LABEL AND SELECTOR ***
+===========================
+
+cd k8s
+
+kubectl get pods
+kubectl run nginx1 --image=nginx
+kubectl run nginx2 --image=nginx
+kubectl get pods
+kubectl label pods nginx1 env=dev
+kubectl label pods nginx2 env=prod
+
+kubectl get pods --show-labels				- Verify labels associated
+kubectl get pods -l env=dev					- Verify only one pod listed with label env=dev
+kubectl get pods -l env=prod				- Verify only one pod listed with label env=prod
+
+kubectl get pods -l env!=prod				- Verify only one pod listed with label env=dev
+
+Either go to below mentioned link and copy the sample example
+https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+
+Or
+
+Create file as mentioned below
+
+vi label.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: label-demo
+  labels:
+    env: prod
+    app: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.14.2
+    ports:
+    - containerPort: 80
+
+save file
+
+kubectl apply -f label.yaml
+
+kubectl get pods -l env=prod    			-   Verify you should see two PODS running
+
+kubectl delete pod label-demo nginx1 nginx2						
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

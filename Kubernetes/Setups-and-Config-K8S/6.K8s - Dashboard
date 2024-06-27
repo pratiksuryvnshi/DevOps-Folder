@@ -1,0 +1,31 @@
+Follow below steps on master node where kubectl is also installed
+
+1. Make sure k8s setup is up and running
+2. Run below command
+
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.7.0/aio/deploy/recommended.yaml
+
+3. kubectl get ns
+
+4. kubectl -n   kubernetes-dashboard get pods -o wide 
+
+5. kubectl -n   kubernetes-dashboard get svc				- Check the service type is ClusterIP
+
+6. kubectl -n   kubernetes-dashboard edit svc kubernetes-dashboard   - Update the ClusterIP to NodePort
+	Delete the dashboard POD which was created earlier
+	e.g. kubectl delete pod kubernetes-dashboard-78c79f97b4-gjr2l -n kubernetes-dashboard
+	
+7. kubectl -n   kubernetes-dashboard get svc				- Verify the service type is NodePort now
+
+8. Create service account and role binding
+kubectl create serviceaccount dashboard -n kubernetes-dashboard
+kubectl create clusterrolebinding dashboard -n kubernetes-dashboard  --clusterrole=cluster-admin  --serviceaccount=kubernetes-dashboard:dashboard
+
+9. Display token 
+
+kubectl -n kubernetes-dashboard create token dashboard				- Copy the token
+
+10. Try to access Master public URL to load dashboard with https and node port disaplyed in above command. It will ask token and kubeconfig configuration
+e.g. https://masterPublicIP:<nodePort>/#/login
+
+11. Copy the disaplyed token and paste in sign in console for token and sign in

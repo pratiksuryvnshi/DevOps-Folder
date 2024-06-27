@@ -1,0 +1,188 @@
+K8S Setup
+(Execute the following command on All the Nodes)
+
+1. Make sure, two ubuntu EC2 servers are up and running and connected with root login. Once logged in to ubuntu user, switch to root - Run sudo su
+Add tag or label as - One as Master and another as workernode1
+
+If you want, you can change hostnames for easy understanding. Run below commands
+
+On Master node - sudo hostnamectl set-hostname "master"
+On Workernode1 - sudo hostnamectl set-hostname "workernode1"
+
+Reconnect again both the servers and switch to root user.
+----
+2.Install Docker
+# Add Docker's official GPG key:
+sudo apt-get update
+sudo apt-get install ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+# Add the repository to Apt sources:
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt-get update
+
+#docker packages-------(optional)
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+----
+3.Install Kubernetes
+   A.Update the apt package index and install packages needed to use the Kubernetes apt repository:
+
+sudo apt-get update
+# apt-transport-https may be a dummy package; if so, you can skip that package
+sudo apt-get install -y apt-transport-https ca-certificates curl gpg
+
+	B.Download the public signing key for the Kubernetes package repositories. The same signing key is used for all repositories so you can disregard the version in the URL:
+
+# If the directory `/etc/apt/keyrings` does not exist, it should be created before the curl command, read the note below.
+# sudo mkdir -p -m 755 /etc/apt/keyrings
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.30/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+	
+	Note: In releases older than Debian 12 and Ubuntu 22.04, directory /etc/apt/keyrings does not exist by default, and it should be created before the curl command.
+	
+	C.Add the appropriate Kubernetes apt repository. Please note that this repository have packages only for Kubernetes 1.30; for other Kubernetes minor versions, you need to change the Kubernetes minor version in the URL to match your desired minor version (you should also check that you are reading the documentation for the version of Kubernetes that you plan to install).
+
+# This overwrites any existing configuration in /etc/apt/sources.list.d/kubernetes.list
+echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.30/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
+	D.Update the apt package index, install kubelet, kubeadm and kubectl, and pin their version:
+
+sudo apt-get update
+sudo apt-get install -y kubelet kubeadm kubectl OR
+sudo apt-get install -y docker-ce kubelet kubeadm kubectl
+sudo apt-mark hold docker-ce kubelet kubeadm kubectl OR
+sudo apt-mark hold kubelet kubeadm kubectl
+
+	E. Enable the kubelet service before running kubeadm:
+
+sudo systemctl enable --now kubelet
+----
+4.Add the iptables rule to sysctl.conf. Enable iptables immediately, Disable swap memory
+
+echo "net.bridge.bridge-nf-call-iptables=1  net.bridge.bridge-nf-call-iptables = 1" | sudo tee -a /etc/sysctl.conf
+sudo sysctl -p
+sudo swapoff -a
+sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+ 	
+ 	A.To set cgroup driver for kubernetes
+ 	The Container runtimes page explains that the systemd driver is recommended for kubeadm based setups instead of the kubelet's default cgroupfs driver, because kubeadm manages the kubelet as a systemd service.
+ 	
+ 		sudo vi /etc/docker/daemon.json
+ 		{
+		 “exec-opts”: [“native.cgroupdriver=systemd”],
+		 “log-driver”: “json-file”,
+		 “log-opts”: {
+		 “max-size”: “100m”
+		 },
+		 “storage-driver”: “overlay2”
+		}
+		
+		If the error comes of 6443 then simple modify the daemon.json file use " cgroupfs instead of systemd"
+and then reboot your instance
+					----------OR----------
+		# kubeadm-config.yaml
+		kind: ClusterConfiguration
+		apiVersion: kubeadm.k8s.io/v1beta3
+		kubernetesVersion: v1.21.0
+		---
+		kind: KubeletConfiguration
+		apiVersion: kubelet.config.k8s.io/v1beta1
+		cgroupDriver: systemd					
+		
+		kubeadm init --config kubeadm-config.yaml
+		
+		Note:-To use cgroupfs and to prevent kubeadm upgrade from modifying the KubeletConfiguration cgroup driver on existing setups, you must be explicit about its value. This applies to a case where you do not wish future versions of kubeadm to apply the systemd driver by default.
+		
+	 B.Run below commands to restart docker and kubelet 
+
+		 systemctl daemon-reload
+		 systemctl restart docker
+		 systemctl restart kubelet
+		 
+		 systemctl status kubelet
+5.Initiate K8S	
+	sudo kubeadm init 
+	or
+	sudo kubeadm init --pod-network-cidr=10.244.0.0/16
+
+	If you face any errors running above command then follow workaround as below.
+
+	rm /etc/containerd/config.toml		(Run this on all the nodes)
+	systemctl restart containerd		(Run this on all the nodes)
+	kubeadm init						(Run this on master node only)
+	
+	A.Set up local kubeconfig(Execute the following command only on the Master node)	
+	
+	mkdir -p $HOME/.kube
+	sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+	sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+6.INSTALL CALICO
+	Install the Tigera Calico operator and custom resource definitions.
+
+	kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.27.3/manifests/tigera-operator.yaml
+
+
+	NOTE
+	Due to the large size of the CRD bundle, kubectl apply might exceed request limits. Instead, use kubectl create or kubectl replace.
+
+	Install Calico by creating the necessary custom resource. For more information on configuration options available in this manifest, see the installation reference.
+
+	kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.27.3/manifests/custom-resources.yaml
+
+
+	NOTE
+	Before creating this manifest, read its contents and make sure its settings are correct for your environment. For example, you may need to change the default IP pool CIDR to match your pod network CIDR.
+
+	Confirm that all of the pods are running with the following command.
+
+	watch kubectl get pods -n calico-system
+
+	Wait until each pod has the STATUS of Running.
+
+	NOTE
+	The Tigera operator installs resources in the calico-system namespace. Other install methods may use the kube-system namespace instead.
+
+	Remove the taints on the control plane so that you can schedule pods on it.
+
+	kubectl taint nodes --all node-role.kubernetes.io/control-plane-
+	kubectl taint nodes --all node-role.kubernetes.io/master-
+
+	It should return the following.
+
+	node/<your-hostname> untainted
+
+	Confirm that you now have a node in your cluster with the following command.
+
+	kubectl get nodes -o wide
+
+	It should return something like the following.
+
+	NAME              STATUS   ROLES    AGE   VERSION   INTERNAL-IP   EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION    CONTAINER-RUNTIME
+	<your-hostname>   Ready    master   52m   v1.12.2   10.128.0.28   <none>        Ubuntu 18.04.1 LTS   4.15.0-1023-gcp   docker://18.6.1
+
+
+	Congratulations! You now have a single-host Kubernetes cluster with Calico.		
+			---------------------------------------------------------------
+
+	#    kubectl taint nodes --all node-role.kubernetes.io/control-plane-
+
+	kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/calico.yaml
+	
+7.Check the status of calico components and wait till all the containers are in running state, To view the status of cluster on master node, run
+
+kubectl get pods -n kube-system
+kubectl get nodes
+
+8.Run below command on master node only to get command to join worker node
+
+kubeadm token create --print-join-command
+
+END-
+------------------------------------------------------------------------------------------------------------------------------------
+
+

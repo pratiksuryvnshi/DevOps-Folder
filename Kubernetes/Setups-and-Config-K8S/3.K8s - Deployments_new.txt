@@ -1,0 +1,183 @@
+
+GETTING STARTED
+===============
+
+Note - 1. You should have Linux Server running and connected. We are provisioning AWS EC2 Linux for lab.
+		  Make sure you are logged in with root user.
+
+	   2. If you are using AWS EC2 AMI for server, then please run below command to stop HTTP server which is running on 80 port
+
+			systemctl stop httpd
+			systemctl status httpd
+			
+	   3. Create dir k8s, and create files and directories in this directory wherever required
+	   
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+*** DEPLOYMENTS ***
+===================
+
+cd k8s
+
+kubectl get deployments
+kubectl get rs
+kubectl get pods
+
+Either go to below mentioned link and copy the sample example
+https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
+
+Or
+
+Create file as mentioned below
+
+vi deployment.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
+        ports:
+        - containerPort: 80
+        strategy:
+        - type: Recreate
+
+		
+
+kubectl apply -f deployment.yaml
+
+kubectl get deployments
+kubectl get rs
+kubectl get pods
+kubectl describe deployments nginx-deployment			- Verify nginx image version
+
+ watch -n 1 kubectl get pods   - to montior output of command kubectl get pods every 1 second
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+*** TO UPDATE NEW CHANGES WITH DEPLOYMENT ***
+==============================================
+
+RollingUpdate -
+--------------
+
+vi deployment.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.16.1
+        ports:
+        - containerPort: 80
+   
+
+=========================================
+strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+==============================================
+
+kubectl apply -f deployment.yaml
+
+kubectl rollout status deployment/nginx-deployment
+kubectl get deployments
+kubectl get rs               											- Verify 1 replicas set
+kubectl get pods             
+kubectl descripe deployments  nginx-deployment 				- Verify nginx image version e.g. It should be 1.16.1
+
+kubectl set image deployment/nginx-deployment nginx=nginx:1.21
+
+kubectl get deployments
+kubectl get rs               				- Verify 2 replicas sets
+kubectl get pods             
+kubectl describe deployments nginx-deployment				- Verify nginx image version. It should be 1.21
+		
+kubectl rollout status deployment/nginx-deployment
+
+Rolling back To Previous :
+-----------------------
+
+kubectl rollout undo deployment.v1.apps/nginx-deployment   		- Verify rollback to previous version
+
+kubectl rollout status deployment/nginx-deployment
+kubectl get deployments
+kubectl get rs               									- Verif 2 replicas sets
+kubectl get pods             
+kubectl describe deployments nginx-deployment					- Verify nginx image version. It should be 1.16.1
+
+
+*** SCALING DEPLOYMENT ***
+==========================
+
+vi scaling.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.16.1
+        ports:
+        - containerPort: 80
+
+save file
+
+kubectl apply -f scaling.yaml
+
+kubectl describe deployment nginx-deployment
+kubectl get rs
+kubectl scale deployment.v1.apps/nginx-deployment --replicas=10
+kubectl get rs
+kubectl get pods
+
+kubectl delete deployment nginx-deployment
+kubectl get pods
+kubectl get rs
+kubectl get deployment
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+

@@ -1,0 +1,145 @@
+
+GETTING STARTED
+===============
+
+Note - 1. You should have Linux Server running and connected. We are provisioning AWS EC2 Linux for lab.
+		  Make sure you are logged in with root user.
+
+	   2. If you are using AWS EC2 AMI for server, then please run below command to stop HTTP server which is running on 80 port
+
+			systemctl stop httpd
+			systemctl status httpd
+			
+	   3. Create dir k8s, and create files and directories in this path wherever required
+	   
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+   
+*** STATE PERSISTENT ***
+========================
+
+for lab, we need k8s setup where we can connect to nodes and verify the host path etc/foo
+managed k8s may not work
+
+Connect to K8s nodes and perform below steps on nodes
+
+sudo mkdir /mnt/data
+cd /mnt/data
+sudo sh -c "echo 'Hello from Kubernetes storage' > /mnt/data/index.html"
+cat /mnt/data/index.html
+
+Please note, creation of mnt directory and index.html file (above commands) should be run on all available K8s nodes
+to verify PV labs
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+*** PERSISTENT VOLUME ***
+=========================
+
+Creating PV
+-----------
+
+cd k8s
+
+Either go to below mentioned link and copy the sample example
+https://kubernetes.io/docs/tasks/configure-pod-container/configure-persistent-volume-storage/
+
+Or
+
+
+Create file as mentioned below
+
+vi pv.yaml
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: task-pv-volume
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data"
+	
+save file
+
+kubectl apply pv.yaml
+kubectl get pv  										- Verify status should be available
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+*** PERSISTENT VOLUME CLAIM ***
+==============================
+
+Creating PVC
+------------
+cd k8s
+
+vi pvclaim.yaml
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: task-pv-claim
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 3Gi
+
+save file
+
+kubectl apply pvclaim.yaml
+kubectl get pv task-pv-volume   						- verify status should be bound
+kubectl get pvc   										- verify status bound
+
+Using PVC inside POD
+--------------------
+
+vi pvpod.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: task-pv-pod
+spec:
+  volumes:
+    - name: task-pv-storage
+      persistentVolumeClaim:
+        claimName: task-pv-claim
+  containers:
+    - name: task-pv-container
+      image: nginx
+      ports:
+        - containerPort: 80
+          name: "http-server"
+      volumeMounts:
+        - mountPath: "/usr/share/nginx/html"
+          name: task-pv-storage
+
+save file
+
+kubectl apply pvpod.yaml
+kubectl get pods
+kubectl exec -it task-pv-pod -- /bin/bash
+
+apt update
+apt install curl
+
+cd /usr/share/nginx/html 					- Verify file present
+curl http://localhost/						- Verify index.html get displayed
+
+kubectl delete pod task-pv-pod
+kubectl delete pvc task-pv-claim
+kubectl delete pv task-pv-volume
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

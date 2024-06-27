@@ -1,0 +1,105 @@
+
+DOCKER IMAGE
+===========
+
+Note - 1. You should have Linux Server running and connected. We are provisioning AWS EC2 Linux for lab.
+		  Make sure you are logged in to AWS EC2 with ec2-user and change user to root by command "sudo su"
+		  
+		  Or You can install docker desktop application on laptop to perform the labs
+
+	   2. If you are using AWS EC2 AMI for docker labs, then please run below command to stop HTTPD server which is running on 80 port
+
+			systemctl stop httpd
+			systemctl status httpd
+			
+	   3. If you are using windows, then please create dir/files accordingly.
+	   
+	   4. If you have dockerhub login created, then you can use play with docker platform for labs.
+	   
+			https://labs.play-with-docker.com/
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+*** DOCKERFILE ***
+===================
+
+Example - 1
+-----------
+
+mkdir demoImage1
+cd demoImage1
+
+vi Dockerfile
+FROM ubuntu
+RUN apt-get update
+RUN apt-get install nginx -y
+CMD ["nginx", "-g", "daemon off;"]
+
+save file
+
+docker build -t myimage .
+docker image ls
+docker container run -dt --name mydemo -p 8080:80 myimage
+docker ps
+curl localhost:8080 or access through browser http://<public IP of host>:8080
+
+docker container stop mydemo
+docker container rm mydemo
+
+
+Example - 2
+------------
+
+mkdir demoImage2
+cd demoImage2
+echo  "Hello, Welcome To Docker world " > index.nginx-debian.html
+ls -lrt
+
+
+vi Dockerfile
+FROM ubuntu
+RUN apt-get update
+RUN apt-get install nginx -y
+COPY index.nginx-debian.html /var/www/html/
+CMD ["nginx","-g","daemon off;"]
+
+docker build -t mynginx .
+docker image ls
+docker container run -dt --name mydemo -p 8080:80 mynginx
+docker ps
+curl localhost:8080 or access through browser http://<public IP of host>:8080
+
+docker container stop mydemo
+docker container rm mydemo
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+*** ENV ***
+===========
+
+Example - 1  (Env variables as part of the Image)
+-------------------------------------------------
+
+mkdir envvar
+cd envvar
+
+vi Dockerfile
+FROM busybox
+ENV abc=5
+ENV xyz file1
+RUN touch mydemofile1.txt
+CMD ["sh"]
+
+docker build -t envvar .
+docker container run -dt --name mydemo -p 80:80 envvar
+docker ps
+docker container exec -it mydemo sh
+env
+ls
+exit
+
+docker container stop mydemo
+docker container rm mydemo
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+

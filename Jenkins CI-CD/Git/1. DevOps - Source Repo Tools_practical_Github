@@ -1,0 +1,133 @@
+
+
+GitHub Walkthrough
+==================
+
+Note - You need to install git client either on your local computer or linux ec2
+You can try windows Git Client with GitHub and Linux Git Client with BitBucket for practice purpose
+
+
+To Create Repository
+--------------------
+
+1. Make sure github account is active
+2. Click on Repositories -> New
+3. Enter repo name e.g. ethansdemo  -> Public - Create repository
+
+To Setup GitHub account with Git Client
+--------------------------------------
+
+1. On local computer or ec2, make sure Git is installed
+2. From your GitHub account, go to Settings => Developer Settings => Personal Access Token => Generate New Token (Give your password) => Fill up the form => click Generate token => Copy the generated Token, it will be something like ghp_khfRfglrTdfkjgFSEdfdggfdgd 
+3. Go to Credential Manager from Control Panel => Windows Credentials => find git:https://github.com => Edit => On Password replace with with your GitHub Personal Access Token
+4. If you don’t find git:https://github.com => Click on Add a generic credential => Internet address will be git:https://github.com and you need to type in your username and password will be your GitHub Personal Access Token => Click Ok
+
+Pushing Initial Commit
+----------------------
+
+Create one folder as a workspace and go to workspace folder on powershell
+
+1. Go to demo repository
+2. Copy and run all the provided commands one by one
+e.g. 
+
+echo "# ethansdemo" >> README.md
+git init
+git add README.md
+git commit -m "first commit"
+git branch -M main
+git remote add origin https://github.com/devopscloudworld/ethansdemo.git
+git push -u origin main
+
+Adding and committing other files
+---------------------------------
+
+1. Create one more file with some contents e.g. first
+2. On powershell, run - git status
+3. git add first or git add .
+4. git commit -m "adding file" first
+5. git status
+6. git push
+
+Similarly, we can add/upload files from GitHub console as well.
+
+Checkout/Clonning Repository
+----------------------------
+1. Go to Git Repository console 
+2. Go to code -> Clone and copy https URL
+3. Create another folder in c drive e.g. mywork
+4. Go to mywork directory
+5. git clone <http URL copied above>
+6. make sure demo repo is clonned successfully
+
+
+========================================================================================================
+
+
+BitBucket Walkthrough
+=====================
+
+Note - Make sure bitbucket account is created.
+Follow below mentioned steps to enable Git CLI communication with bitbucket
+https://support.atlassian.com/bitbucket-cloud/docs/set-up-personal-ssh-keys-on-linux/
+
+To Setup Git Client SSH communication with BitBucket follow below steps
+
+1. Create ssh key pair as below
+ssh-keygen -t rsa -o -C "bitbucket-ssh@example.com"
+
+2. Go to home dir e.g. /root/.ssh folder and open the content of the .pub file.
+
+e.g. id_rsa.pub
+
+3. Copy the content of the above file
+
+4. Go to bitbucket -> Setting -> Personal BitBucket Setting -> SSH Keys - Add key
+
+Creating Repository
+-------------------
+
+1. Once logged in, it will ask for workspace creation. 
+2. Create workspace e.g. devops-training
+3. Go to Project and create project e.g. demo-project
+4. Click on create repository e.g demo
+
+Clonning Demo Repo
+-----------------------
+
+1. Got bitbucket console -> demo repo -> Clone -> Copy Clone URL path
+2. Go to powershell -> workspace directory and run the commands
+e.g git clone https://devopscloudworld@bitbucket.org/devopscloudworld/demo.git
+3. Make sure, repo is successfully clonned
+
+Creating Feature branch
+-----------------------
+
+1. Go to console -> demo repository -> branches -> Create branch
+2. Enter name of the branch -> Create branch  e.g AddingMenu
+3. On powershell, run git status - make sure you are on master
+4. git checkout AddingMenu
+5. git status 						- make sure, you are on feature branch
+
+
+Adding/Committing/Pushing Changes to Feature branch
+-------------------------------------------------
+
+1. Go to demo dir and create files
+2. Go to powershell, run git status
+3. git add .
+4. git commit -m "Added menu feature" .
+5. git status
+6. git push
+7. Verify all changes are in feature branch in bitbucket console
+
+
+Creating PullRequest and Merging
+--------------------------------
+
+1. On console -> Go to demo repo -> Branches -> AddingMenu
+2. In Pull Request coloumn -> Click on create
+3. Add description, Add reviewer 
+4. Verify your changes are correct by diff section -> Create Pull request
+5. Approve-> Merge
+6. Verify changes are merged into  master

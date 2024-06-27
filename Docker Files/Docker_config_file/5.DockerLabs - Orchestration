@@ -1,0 +1,228 @@
+
+ORCHESTRATION
+==============
+
+
+Note - 1. You should have Linux Server running and connected. We are provisioning AWS EC2 Linux for lab.
+		  Make sure you are logged in to AWS EC2 with ec2-user and change user to root by command "sudo su"
+
+	   2. If you are using AWS EC2 AMI for Docker swarm, then please run below command to stop HTTPD server which is running on 80 port
+
+			systemctl stop httpd
+			systemctl status httpd
+
+	   3. Follow similar steps and create total 3 servers name as master, worker-node1 and worker-node2
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+*** DOCKER SWARM SETUP ***
+==========================
+
+Run below commands on all three servers
+
+yum install docker -y
+systemctl start docker
+systemctl enable docker
+
+sudo hostnamectl set-hostname "master"
+
+On Master Node
+------------ 
+ifconfig 			- Note down eth0 IP
+
+docker swarm init    (If you face any issue related to IP then run below command, otherwise skip below command)
+docker swarm init --advertise-addr <IP address noted above>
+
+Copy the join command displayed in output of above command and run on each worker node as
+e.g docker swarm join --token SWMTKN-1-4e6jongna1s7u8uvqm9z9u3kq1rq7dsmcvgbfxtcfdpq28md24-bohmstdsxxzmcqi6vt6p7j93z 172.31.30.11:2377
+
+Run below command from master node always
+
+docker node ls
+
+docker swarm leave             --if error occur while connecting.....on nodes do it.
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+*** SERVICE ***
+===============
+
+Note - Run most of the commands on Master node only, unless specified
+
+docker service ls
+docker service create --name webapp --replicas 3 nginx
+docker service ls
+docker ps
+docker service ps webapp
+login to one of the node where container is running . e.g. worker-node1
+docker container stop <container ID>
+docker service ps webapp 							- Verify new container is getting started on same node or different node
+
+docker service rm webapp
+docker service ls
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+*** SERVICE SCALING ***
+=======================
+
+Note - Run most of the commands on Master node only, unless specified
+
+docker service ls
+docker service create --name webapp --replicas 3 nginx
+dockre service ls
+docker service ps webapp
+
+Scaling  
+------------------------
+
+docker service scale webapp=6
+docker service ps webapp
+Go to one of the worker node say worker-node1
+systemctl stop docker
+
+docker service ps webapp
+docker service scale webapp=1
+docker service ps webapp
+
+Got to node where you stopped docker service above and start the docker service
+systemctl start docker
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+*** PUBLISHING PORT OR PORT MAPPING IN SWARM ***
+================================================
+
+Note - Run most of the commands on Master node only, unless specified
+
+docker service ls
+docker ps
+
+docker service create --name web --replicas 3 --publish 8080:80 nginx
+docker service ls
+docker service ps web
+docker ps			 								- Verify 	port
+
+Got to either worker-node1 or worker-node2
+curl <worker-node-IP>:8080 							- It will  work
+
+Access through browser over http as well
+
+docker service rm web
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+*** DOCKER COMPOSE   ***
+=========================
+
+Note - On windows, docker-compose comes by default with Docker Desktop installation.
+
+Note - Run most of the commands on Master node only, unless specified
+
+Install Docker compose package on Master only
+
+Go to docker compose install page and download package
+sudo curl -L https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
+
+chmod +x /usr/local/bin/docker-compose
+cp /usr/local/bin/docker-compose /bin/
+
+docker-compose version
+mkdir compose
+cd compose
+vi docker-compose.yml
+
+version: "3.9"
+    
+services:
+  db:
+    image: mysql:5.7
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: somewordpress
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: wordpress
+    
+  wordpress:
+    depends_on:
+      - db
+    image: wordpress:latest
+    volumes:
+      - wordpress_data:/var/www/html
+    ports:
+      - "8000:80"
+    restart: always
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wordpress
+      WORDPRESS_DB_NAME: wordpress
+volumes:
+  db_data: {}
+  wordpress_data: {}
+	
+	
+docker-compose config 
+docker-compose up -d                   --pull the container
+docker ps
+Access wordpress application by browser - http://public IP of Master Node:8000
+docker-compose down
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+*** CONTAINER PLACEMENTS ***
+============================
+
+Note - Run most of the commands on Master node only, unless specified
+
+docker node ls
+docker node inspect worker-node2
+docker node update --label-add env=prod worker-node2       --add label from master
+docker node inspect worker-node2
+docker service create --name myapp --constraint node.labels.env==prod --replicas 3 nginx
+docker service ps myapp 						- Verify all 3 containers running on worker-node2 only
+docker service rm myapp
+
+
+docker run --name mycontainer --memory=1g --cpus=0.5 nginx
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+Volumes***********************************************************************************************************************
+(((+(((((((((((((((((((((((((((}
+
+docker volume ls
+docker volume create demovolume
+docker volume ls
+
+cd /var/lib/docker/volume/                       --to cheack
+ls -lrth
+
+
+docker container run -dt --name mydemo -v demovolume:/var nginx
+docker ps
+docker volume inspect demovolume
+cd /var/lib/docker/volume/demovolume/-data
+
+ls -lrth
+docker container exec -it mydemo bash
+cd /var
+ls -lrth
+exit
+
+docker container stop mydemo
+docker container rm mydedmo
+docker ps -a
+
+
+docker volume rm demovolume
+
+
+
+

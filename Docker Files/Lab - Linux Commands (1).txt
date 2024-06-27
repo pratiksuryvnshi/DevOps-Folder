@@ -1,0 +1,360 @@
+
+Pre-Requisites
+==============
+
+1. Create One Linux Server for practice (Make sure you are aware of credentials)
+2. Note Down IP e.g. 1.2.3.4
+
+SSH - Connecting to Linux Server from Win
+===========================================
+
+1. Open putty/mobaxterm
+2. Enter hostname
+3. Provide the ppk key
+4. Enter username as ec2-user
+
+SSH - Connecting to Linux Server from Linux
+===========================================
+
+1. ssh user@Host      (It will ask for user password)
+e.g. ssh root@1.2.3.4
+
+2. ssh -i key.pem user@Host   (To connect by using pem key)
+e.g. ssh -i key.pem user@1.2.3.4
+
+3. Configure SSH to enable password authentication
+
+
+Important Files/Directories To look for
+===================================
+
+1. /etc/hosts
+2. /etc/networks
+3. /etc/services
+4. /etc/resolv.conf
+5. /etc/passwd
+6. /etc/init.d 
+7. /etc/sshd etc
+
+
+System / OS Info
+=================
+
+1. To show current date and time
+date
+
+2. To show current uptime
+uptime
+
+3. To see who are logged in
+whoami
+id
+
+4. To show kernel info
+uname -a
+
+5. CPU and memory information
+cat /proc/cpuinfo
+cat /proc/meminfo
+
+6. Disk usage
+df -kh
+du
+
+7. To show CPU/memory utilization
+top
+
+8. To see environment variables
+env
+
+9. To set environment variables
+export abc=10
+
+10. Update Path variable
+export PATH=$PATH:<new variable>
+
+
+File/Directory Commands
+=======================
+
+1. Listing Files
+ls
+
+2. change the directory
+cd <dir name>
+e.g. cd abc
+
+3. Current directory
+pwd
+
+4. Create directory
+mkdir <dirname>
+e.g. mkdir dir1
+
+5. Create file 
+   a. touch file1
+   b. echo "Hello.." > file2
+   c. vi file3  <Enter>
+      Press i
+	  Write Any contents
+	  
+	  To save the file
+	  Esc : wq
+	  
+6. Copy file1 to file2
+cp file1 file2
+
+7. Rename file
+mv file1 file2
+
+8. Display first 10 lines of files
+head <filename>
+
+9. Display last 10 lines of files
+tail file
+
+10. To display contents of files continuosly
+tail -f filename
+
+11. To remove file
+rm file
+
+12. To force remove
+rm -rf file
+
+
+App Installation
+================
+
+1. To install package by RPM
+rpm -ivh <rpm file>
+e.g rpm -ivh abc.rpm
+
+2. To upgrade
+rmp -U <rpm file>
+e.g. rpm -U abc.rpm
+
+3. To Install by yum
+
+sudo yum install packagename
+e.g. sudo yum install httpd
+
+4. To check whether package is installed 
+rpm -qa <package name>
+
+5. To remove package
+
+sudo rpm -e packagename
+e.g. sudo rpm -e <rpm file>
+
+6. To remove package by yum
+
+sudo yum remove packagename
+e.g. sudo yum remove httpd
+
+
+Service
+=======
+
+1. To check the status of service
+service sshd status 
+sudo systemctl status httpd
+
+2. To stop the service
+service sshd stop
+sudo systemctl stop httpd
+
+3. To start the service
+service sshd start
+sudo systemctl start httpd
+
+4. To restart the service
+service sshd restart
+sudo systemctl restart httpd
+
+
+Compression
+============
+
+1. To Compress file
+zip <filename>
+e.g. zip data.zip *.doc
+
+gzip <filename>
+e.g. gzip mydata.doc
+
+compress <filename>
+compress <filename>
+
+tar -zcvf <tgz filename> <files>
+e.g. tar -zcvf data.tgz *.doc
+
+2. To Decompress
+unzip file.zip
+
+gunzip mydata.doc.gz
+
+tar -xzvf logs_archive.tar.gz
+
+
+
+Find/Search
+============
+
+1. To fine perticular file
+find ./ -name sample.txt 
+
+2. Search file with pattern
+find ./ -name *.txt 
+
+3. To search string/pattern in file and display all the lines accordingly
+e.g. Create file with some contents
+grep "pattern/word" filename
+
+4. Search perticular data from output of first command
+e.g. ls -lrt | grep -i <pattern>
+
+
+Permissions
+===========
+
+1. To change the permissions
+e.g. chmod 777 abc.txt
+Here, read/write/execute to all
+
+2. To ownership of the file/directory
+chown <owner:	Group> file
+e.g. chown user:group file1.txt
+
+
+Network
+=======
+
+1. Check whether remote server is reachable
+ping host
+e.g. ping 1.2.3.4 or ping hostname
+
+2. To get ip of server
+ifconfig
+
+3. To download the remote file
+wget <filename>
+curl
+
+4. Talk to host on given port
+e.g. telnet host <port>
+
+5. To display networking stats
+netstat -a
+
+6. Tracing the route of IP packets
+traceroute
+
+7. Query DNS server information
+dig
+
+8. Query Internet name servers
+nslookup 
+
+
+Misc Important Commands
+=======================
+
+1. Pipe (|) - For concatenating commands
+
+2. watch - To show command output runtime
+
+e.g. watch -n 1 date
+
+3. Return Code of commands
+echo $?
+
+4. To execute system commands with root priviledges
+e.g. sudo service httpd start
+
+
+
+Shell Scripting
+===============
+
+
+1. Create file with below content 
+e.g. myscript.sh
+
+#!/bin/sh
+echo "Hello World"
+
+chmod +x myscript.sh
+sh myscript.sh     or run like   ./myscript.sh
+
+
+2. Variables
+
+#!/bin/bash
+
+greeting=Hello
+name=Linux
+echo $greeting $name
+
+
+3. Interactive/User input
+
+e.g. Modify above file with below contents and execute
+
+#!/bin/sh
+echo "what is your name?"
+read name
+echo "Where are you from, $name?"
+read location
+echo "I am from $location !"
+
+4. If loop
+
+read x
+read y
+
+if [ $x -gt $y ]
+then
+echo X is greater than Y
+elif [ $x -lt $y ]
+then
+echo X is less than Y
+elif [ $x -eq $y ]
+then
+echo X is equal to Y
+fi
+
+5. For loop..
+
+#!/bin/bash
+
+for cnt in {1..5}
+do
+    echo $cnt
+done
+
+6. Running set of Linux commands
+
+#!/bin/bash
+
+ls
+date
+env
+
+
+
+Short Cuts/Smart Way to Work With Linux
+======================================
+
+1. Use multiple terminals/sessions if required
+
+2. Use of Cnt + R - Reverse command search
+
+3. Use of tab to autocomplete command
+
+4. Use of history command
+e.g. history
+
+5. use of alias for quick typing
+e.g. alias e=echo
+type e $PATH and see whether it displays output of $PATH 

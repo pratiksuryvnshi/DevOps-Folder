@@ -1,0 +1,109 @@
+
+REGISTRY
+=========
+
+Note - 1. You should have Linux Server running and connected. We are provisioning AWS EC2 Linux for lab.
+		  Make sure you are logged in to AWS EC2 with ec2-user and change user to root by command "sudo su"
+		  
+		  Or You can install docker desktop application on laptop to perform the labs
+
+	   2. If you are using AWS EC2 AMI for docker labs, then please run below command to stop HTTPD server which is running on 80 port
+
+			systemctl stop httpd
+			systemctl status httpd
+			
+	   3. If you have dockerhub login created, then you can use play with docker platform for labs.
+	   
+			https://labs.play-with-docker.com/
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+*** USING DOCKER PUBLIC REGISTRY (DOCKERHUB) AND PUSHING IMAGES TO PUBLIC REGISTRY ***
+======================================================================================
+
+1. Login to dockerhub (hub.docker.com)
+2. Click on Create repository
+3. Enter name and description of repo - e.g. mydemorepo
+4. Set the visibilty as public 
+5. Click on create
+
+
+docker pull busybox
+          Get your repository dnsname. Its generally username with which you logged in to Docker hub. e.g. demouser
+
+docker image ls 
+
+docker tag busybox:latest demouser/mydemorepo:mybbimage   - Please use your dnsname. Here, mybbimage is a tag
+
+docker login
+Enter your dockerhub username and password - Login should successful
+
+docker push demouser/mydemorepo:mybbimage   - Please use your dnsname
+docker image prune -a
+dockre image ls
+
+docker pull demouser/mydemorepo:mybbimage
+docker image ls
+
+docker image prune -a
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+[Optional]
+
+*** CREATING PRIVATE DOCKER REGISTRY AND PUSHING IMAGES TO PRIVATE REGISTRY ***
+================================================================================
+
+Login to Docker Hub
+Search registry on docker hub
+
+docker run -d -p 5000:5000 --restart always --name registry registry:2
+docker image ls
+docker ps 
+
+docker pull nginx
+docker image tag nginx:latest localhost:5000/myimage:v1
+docker image ls
+docker exec -it 8dcea6c37c02 sh     --->login in container
+find / -name *myimage*
+
+docker image push localhost:5000/myimage:v1        
+
+
+docker image rm nginx
+docker image rm localhost:5000/myimage:v1
+docker image ls
+
+docker pull localhost:5000/myimage:v1
+docker image ls
+
+docker container stop registry
+docker container rm registry
+
+docker image prune -a
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+*** CREATING AWS ECR REPO AND PUSHING IMAGES TO ECR REPO ***
+==============================================================
+
+Note - Make sure docker image is available on server from where you are running the docker commands.
+Make sure AWS cli version 2 is installed to run ECR commands
+
+Login to AWS console
+Go to ECR service
+Click on create repository
+Select public
+Enter repo name e.g. myecrdemo
+Click on Create Repository
+Select above created repo and click on view push commands
+access key need
+aws config
+
+Follow the steps provided on console to push the docker image from your AWS CLI 
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
