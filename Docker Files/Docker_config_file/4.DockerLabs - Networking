@@ -131,3 +131,22 @@ Restart****************************
 *************
 
 docker container run -dt --restart always --name container3 busybox
+-----------------------------------------------------------------------------------------------------------------------------------------
+*****************************************************************************************************************************************
+
+MACVLAN Network
+===============
+
+sudo docker network create -d macvlan \
+>--subnet X.X.X.X/X \
+>--gateway X.X.X.X \
+>-o parent=enp0s3 \
+>namenetwork
+
+docker network ls
+
+###--you have assign specific ip address to that docker image 
+and its promiscuous mode, no dhcp
+        ----------------
+
+
