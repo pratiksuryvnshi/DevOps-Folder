@@ -43,6 +43,10 @@ http://localhost:9090
 9. Click on save and finish -> Start using jenkins
 
 mount -o remount, size-5G /tmp/
+-------------OR-----------------
+ sudo mount -o size=5G -t tmpfs tmpfs /tmp
+
+
 
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
