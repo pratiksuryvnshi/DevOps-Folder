@@ -113,39 +113,34 @@ Note - 1. You should have Linux Server running and connected. We are provisionin
 4. docker --version
    docker system info
 
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+*** To get started with Docker Engine on Ubuntu ***
+===================================================
+Run the following command to uninstall all conflicting packages:
+$ for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do sudo apt-get remove $pkg; done
 
-*** DOCKER INSTALLATION ON UBUNTU AMAZON EC2 *** (Optional)
-===========================================================
+ToSetUp Repo
+# Add Docker's official GPG key:
+sudo apt-get update
+sudo apt-get install ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
 
-Please follow the below URL for installation steps on ubuntu
+# Add the repository to Apt sources:
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt-get update
 
-https://docs.docker.com/engine/install/ubuntu/
+ToInstall
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-Or
+systemctl start docker
 
-Run below commands step by step
+systemctl status docker
 
-1. apt-get update
- 
-2. apt-get install \
-    apt-transport-https \
-    ca-certificates \
-    curl \
-    gnupg \
-    lsb-release
-  
-3. curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
- 
-4. echo \
-  "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
-  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
- 
-5. apt-get update
-6. apt-get install docker-ce docker-ce-cli containerd.io
- 
-7. systemctl status docker
-8. docker --version
+docker --version
    docker system info
 
 
