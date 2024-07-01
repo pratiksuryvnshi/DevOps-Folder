@@ -71,13 +71,6 @@ curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --de
 
 5. Add the Kubernetes repository(Execute the following command on All the Nodes)
 
-cat << EOF | sudo tee /etc/apt/sources.list.d/kubernetes.list
-deb https://apt.kubernetes.io/kubernetes-xenial main
-EOF
-
-In case you get error adding above repo as packages not available while executing sudo apt-get update
-
-remove above content from /etc/apt/sources.list.d/kubernetes.list using vi Editor and execute following command
 
 mkdir /etc/apt/keyrings
 
@@ -90,7 +83,7 @@ echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.
 
 sudo apt-get update
 
-7. Install Docker, kubelet, kubeadm, and kubectl(Execute the following command on All the Nodes)
+7. Install Docker, kubelet, kubeadm, and kubectl           (Execute the following command on All the Nodes)
 
 sudo apt-get install -y docker-ce kubelet kubeadm kubectl
 
