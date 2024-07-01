@@ -110,7 +110,7 @@ create file called = vi /etc/docker/daemon.json
 Add below content into file and save it
 
 {
-"exec-opts": ["native.cgroupdriver=systemd"]  ##cgroupfs
+"exec-opts": ["native.cgroupdriver=systemd"]                           ##cgroupfs
 }
 
 
@@ -123,7 +123,7 @@ and then reboot your instance
  systemctl restart docker
  systemctl restart kubelet
  
- systemctl status kubele
+ systemctl status kubelet
 ------------------------------------------------------------------------------
 
 OR SIMPLE STEPS INSTALLATION OF K8S AND DOCKER 
