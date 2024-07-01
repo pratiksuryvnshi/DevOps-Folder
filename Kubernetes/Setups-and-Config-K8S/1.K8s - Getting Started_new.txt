@@ -123,7 +123,17 @@ and then reboot your instance
  systemctl restart docker
  systemctl restart kubelet
  
- systemctl status kubelet
+ systemctl status kubele
+------------------------------------------------------------------------------
+
+OR SIMPLE STEPS INSTALLATION OF K8S AND DOCKER 
+===========================================================================================================
+
+1) Install Docker
+apt-get install docker.io
+
+2)Install K8s
+
 
  
  -------------8-8-8-8-8-8-8-8-8-8-8-8-8-8-8-8-8-8-8-8-8-8-8-8-8-8-8--------------
