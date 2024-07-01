@@ -53,7 +53,7 @@ Reconnect again both the servers and switch to root user.
 
 2. Get the Docker GPG key (Run below commmand on both the nodes)
 
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -    OR
+##--$ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -    OR
 
 sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
 
@@ -65,14 +65,14 @@ sudo add-apt-repository    "deb [arch=amd64] https://download.docker.com/linux/u
   
 4. Get the Kubernetes gpg key(Execute the following command on All the Nodes)
 
-curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -   OR
+##--$ curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -   OR
 
 curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes.gpg
 
 5. Add the Kubernetes repository(Execute the following command on All the Nodes)
 
 
-mkdir /etc/apt/keyrings
+$ mkdir /etc/apt/keyrings          ----------opinional
 
 curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 
