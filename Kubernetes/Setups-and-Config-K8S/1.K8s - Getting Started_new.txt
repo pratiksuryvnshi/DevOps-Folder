@@ -115,6 +115,27 @@ Add below content into file and save it
 "exec-opts": ["native.cgroupdriver=systemd"]                           ##cgroupfs
 }
 
+--------------------OR------------------------
+
+sudo mkdir /etc/docker
+cat <<EOF | sudo tee /etc/docker/daemon.json
+{
+  "exec-opts": ["native.cgroupdriver=systemd"],
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "100m"
+  },
+  "storage-driver": "overlay2"
+}
+EOF
+
+sudo systemctl enable docker
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+
+
+
+
 
 If the error comes of 6443 then simple modify the daemon.json file use " cgroupfs instead of systemd"
 and then reboot your instance
