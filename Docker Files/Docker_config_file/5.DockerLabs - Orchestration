@@ -116,6 +116,10 @@ docker service rm web
 *** DOCKER COMPOSE   ***
 =========================
 
+Reference1:
+https://docs.docker.com/compose/install/standalone/
+
+
 Note - On windows, docker-compose comes by default with Docker Desktop installation.
 
 Note - Run most of the commands on Master node only, unless specified
