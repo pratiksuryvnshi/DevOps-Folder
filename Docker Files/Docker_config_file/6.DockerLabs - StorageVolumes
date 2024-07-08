@@ -54,6 +54,16 @@ docker volume rm demovolume
 ls -lrt /var/lib/docker/volumes/          			- Verify files and directories deleted with volume deletion
 
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+*** Sharing local files with containers ***
+===========================================
+
+
+docker run -v /HOST/PATH:/CONTAINER/PATH -it nginx
+
+docker run --mount type=bind,source=/HOST/PATH,target=/CONTAINER/PATH,readonly nginx
+
+docker run -v HOST-DIRECTORY:/CONTAINER-DIRECTORY:rw nginx
+
 
 
 
