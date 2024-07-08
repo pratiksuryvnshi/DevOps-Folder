@@ -119,7 +119,14 @@ docker container exec -it mydemo sh
 env
 ls
 exit
+----------------------
+*** Overriding Container ***
+============================
 
+docker run -e foo=bar postgres env
+
+docker run -e POSTGRES_PASSWORD=secret --memory="512m" --cpus="0.5" postgres
+---------------------------
 docker container stop mydemo
 docker container rm mydemo
 
