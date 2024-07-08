@@ -64,9 +64,37 @@ docker run --mount type=bind,source=/HOST/PATH,target=/CONTAINER/PATH,readonly n
 
 docker run -v HOST-DIRECTORY:/CONTAINER-DIRECTORY:rw nginx
 
+mkdir public_html 
+cd public_html
+vi index.html
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title> My Website with a Whale & Docker!</title>
+</head>
+<body>
+<h1>Whalecome!!</h1>
+<p>Look! There's a friendly whale greeting you!</p>
+<pre id="docker-art">
+   ##         .
+  ## ## ##        ==
+ ## ## ## ## ##    ===
+ /"""""""""""""""""\___/ ===
+{                       /  ===-
+\______ O           __/
+\    \         __/
+ \____\_______/
 
+Hello from Docker!
+</pre>
+</body>
+</html>
 
+docker run -d --name my_site -p 8080:80 -v .:/usr/local/apache2/htdocs/ httpd:2.4
+
+curl local:8080
 
 
 
