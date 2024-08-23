@@ -26,7 +26,7 @@ Sudo yum install ansible
 
 	systemctl status sshd
 	
-5. Add node1 private ip entry in /etc/hosts file of controller.
+5. Add node1 public ip entry in /etc/hosts file of controller.
 e.g. 1.2.3.4  node1
 
 6. Ping node1 - It should work
